@@ -3,10 +3,29 @@ import './index.css';
 import { useState } from 'react';
 
 import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const createUserFormSchema = z.object({
+  email: z
+    .string()
+    .nonempty("O email é obrigatório")
+    .email("Formato de email inválido"),
+  password: z.string().min(6, "A senha precisa de pelo menos 6 caractreres"),
+});
+
+type CreateUserFormData = z.infer<typeof createUserFormSchema>;
 
 function App() {
   const [output, setOutput] = useState("");
-  const { register, handleSubmit } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateUserFormData>({
+    resolver: zodResolver(createUserFormSchema),
+  });
 
   function createUser(data: unknown) {
     setOutput(JSON.stringify(data, null, 2));
@@ -16,7 +35,7 @@ function App() {
 
   return (
     <>
-      <main className="h-screen text-zinc-300 bg-zinc-950 flex items-center justify-center">
+      <main className="flex-col gap-10 h-screen text-zinc-300 bg-zinc-950 flex items-center justify-center">
         <form
           action=""
           className="flex flex-col gap-4 w-full max-w-xs"
@@ -26,9 +45,10 @@ function App() {
             <label htmlFor="">E-mail</label>
             <input
               type="email"
-              className="border border-zinc-200 shadow-sm rounded h-10 px-3"
+              className="bg-zinc-800 text-white  border border-zinc-600 shadow-sm rounded h-10 px-3"
               {...register("email")}
             />
+            {errors.email && <span className="">{errors.email.message}</span>}
           </div>
 
           <div className="flex flex-col gap-1">
@@ -36,9 +56,12 @@ function App() {
             <input
               type="password"
               id=""
-              className="border border-zinc-200 shadow-sm rounded h-10 px-3"
+              className="bg-zinc-800 text-white border border-zinc-600 shadow-sm rounded h-10 px-3"
               {...register("password")}
             />
+            {errors.password && (
+              <span className="">{errors.password.message}</span>
+            )}
           </div>
 
           <button
@@ -48,6 +71,8 @@ function App() {
             Salvar
           </button>
         </form>
+
+        <pre>{output}</pre>
       </main>
     </>
   );
